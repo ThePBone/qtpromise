@@ -1,25 +1,31 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.17.0 FATAL_ERROR)
 
-if(DEFINED PROJECT_NAME)
-    set(SUBPROJECT ON)
-endif()
+# metadata
+set(META_PROJECT_NAME qtpromise)
+set(META_PROJECT_TYPE library)
+set(META_APP_NAME "qtpromise")
+set(META_PROJECT_VARNAME_UPPER QTPROMISE)
+#set(META_PUBLIC_QT_MODULES Gui Widgets Network)
+set(META_PROJECT_LICENSE "MIT")
 
-project(qtpromise VERSION 0.7.0 LANGUAGES CXX)
+file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/qtpromise/*.h)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+# add project files
+set(HEADER_FILES
+    include/QtPromise
+    ${SRC_FILES}
+)
 
-find_package(QT 5.6.0 NAMES Qt6 Qt5 REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+set(SRC_FILES src/qtpromise/qpromise.inl)
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(qtpromise INTERFACE)
-add_library(qtpromise::qtpromise ALIAS qtpromise)
+# find c++utilities
+find_package(${PACKAGE_NAMESPACE_PREFIX}c++utilities${CONFIGURATION_PACKAGE_SUFFIX} 5.0.0 REQUIRED)
+use_cpp_utilities()
 
-target_link_libraries(qtpromise INTERFACE Qt${QT_VERSION_MAJOR}::Core)
-target_include_directories(qtpromise INTERFACE "${CMAKE_CURRENT_LIST_DIR}/include")
+# find qtutilities (only CMake modules used)
+find_package(${PACKAGE_NAMESPACE_PREFIX}qtutilities${CONFIGURATION_PACKAGE_SUFFIX_QTUTILITIES} 6.3.0 REQUIRED)
+use_qt_utilities()
 
 add_definitions(
     -DQT_DEPRECATED_WARNINGS
@@ -76,7 +82,12 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     )
 endif()
 
-if(NOT SUBPROJECT)
-    enable_testing()
-    add_subdirectory(tests)
-endif()
+# link also explicitly against the following Qt modules
+#list(APPEND ADDITIONAL_QT_MODULES Network Gui Widgets Svg)
+
+# include modules to apply configuration
+include(BasicConfig)
+include(QtConfig)
+include(LibraryTarget)
+include(ConfigHeader)
+
